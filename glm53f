@@ -2,11 +2,11 @@
 # docker compose with the model and every overlay in experimental/compose, in
 # the order the README's numbers were measured with (later files win).
 #
-#   ./glm53 up -d                       start
-#   ./glm53 down --timeout 60           stop
-#   ./glm53 logs -f | ps | config       anything else docker compose takes
-#   ./glm53 -f compose/ext.yaml up -d   your own files, after the overlays
-#   ./glm53 --stock up -d               compose/glm53.yaml alone (stock kernels;
+#   ./glm53f up -d                       start
+#   ./glm53f down --timeout 60           stop
+#   ./glm53f logs -f | ps | config       anything else docker compose takes
+#   ./glm53f -f compose/ext.yaml up -d   your own files, after the overlays
+#   ./glm53f --stock up -d               compose/glm53.yaml alone (stock kernels;
 #                                       the entrypoint also wants ALLOW_STOCK=1)
 #
 # On a host running dispramd (kindling-spark-os) it also adds

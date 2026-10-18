@@ -50,29 +50,32 @@ session; filled per topology as each completes.
 
 ## Running it
 
-The `./glm53` launcher stacks `compose/glm53.yaml` + every overlay in
+The `./glm53f` launcher stacks `compose/glm53.yaml` + every overlay in
 `experimental/compose` (including `exlr8.yaml` last). Run the same command on
 every box; mentat elects the head and the workers. `EXLR8_TREE` defaults to this
 repo's `tree/`.
 
+Docker needs root on these hosts, so run under `sudo env` (it passes the knobs
+through). Pin the head with `HEAD_HOST` + `ROLE` when you want a known API box.
+
 ```bash
 # TP=4, k4 (default)
-MODELS_ROOT=/mnt/nfs/models ./glm53 up -d
+sudo env MODELS_ROOT=/mnt/nfs/models ./glm53f up -d
 
 # TP=2, k3
-TP=2 VLLM_EXLR8_WIDTHS=k3 ./glm53 up -d
+sudo env TP=2 VLLM_EXLR8_WIDTHS=k3 ./glm53f up -d
 
 # TP=1, k2 (single box)
-TP=1 VLLM_EXLR8_WIDTHS=k2 ./glm53 up -d
+sudo env TP=1 VLLM_EXLR8_WIDTHS=k2 ./glm53f up -d
 
 # TP=3, k4 (padded config overlay)
-TP=3 VLLM_EXLR8_WIDTHS=k4 MODEL_DIR=/models/nas/glm-5.3-flash/exlr8-release-tp3 \
-  ./glm53 -f experimental/compose/tp3.yaml up -d
+sudo env TP=3 VLLM_EXLR8_WIDTHS=k4 MODEL_DIR=/models/nas/glm-5.3-flash/exlr8-release-tp3 \
+  ./glm53f -f experimental/compose/tp3.yaml up -d
 ```
 
 `EXLR8_TAG` names the weight snapshot (a re-boot at the same tag restores in
 ~15 s; a new tag does a full load from the release). Wait for `self-test:
-PASSED` in `docker logs`.
+PASSED` in `sudo ./glm53f logs`.
 
 ## What the overlay changes
 
