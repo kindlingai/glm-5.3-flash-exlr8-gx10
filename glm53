@@ -14,7 +14,11 @@
 # GB10's display carveout. DISPRAM=0 leaves it out.
 set -e
 cd "$(dirname "$0")"
-overlays=(arx snapshot adaptive-k fp8 megamoe fixes sp recoverssm)
+# exlr8 stacks last: its vLLM files win over every other overlay's copy. The tree
+# of patched files is bundled in this repo; mount it from an absolute path so the
+# overlay resolves regardless of the working directory.
+export EXLR8_TREE="${EXLR8_TREE:-$(pwd)/tree}"
+overlays=(arx snapshot adaptive-k fp8 megamoe fixes sp recoverssm exlr8)
 files=(-f compose/glm53.yaml)
 extra=()
 stock=0
