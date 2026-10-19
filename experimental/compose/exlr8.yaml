@@ -56,7 +56,11 @@ services:
       - ${EXLR8_TREE:-../../tree}/vllm/v1/worker/utils.py:/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/utils.py:ro
     environment:
       - MODEL_DIR=${MODEL_DIR:-/models/nas/glm-5.3-flash/exlr8-release}
-      - EXTRA_ARGS=--scheduler-cls vllm.v1.core.sched.adaptive_k.AdaptiveKScheduler --quantization exlr8 --load-format exlr8 ${PROF_ARGS:-}
+      # QUANT is appended by the entrypoint OUTSIDE EXTRA_ARGS, so an overlay
+      # that restates EXTRA_ARGS (tp3/tp6/seqcap32/prof) can no longer drop the
+      # exlr8 quantization and load-format and silently load bf16.
+      - QUANT=${QUANT:-exlr8}
+      - EXTRA_ARGS=--scheduler-cls vllm.v1.core.sched.adaptive_k.AdaptiveKScheduler ${PROF_ARGS:-}
       - VLLM_EXLR8_WIDTHS=${VLLM_EXLR8_WIDTHS:-k4}
       - VLLM_WEIGHT_SNAPSHOT_DIR=/root/.cache/weight-snapshots
       - VLLM_WEIGHT_SNAPSHOT_TAG=exlr8-${EXLR8_TAG:-dev}

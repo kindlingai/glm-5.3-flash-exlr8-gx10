@@ -1079,4 +1079,5 @@ exec vllm serve "$MODEL" \
   --reasoning-parser glm45 \
   "${SPEC[@]}" \
   --host 0.0.0.0 --port "${API_PORT:-8002}" \
-  ${EXTRA_ARGS:-}
+  ${EXTRA_ARGS:-} \
+  ${QUANT:+--quantization $QUANT --load-format $QUANT}
