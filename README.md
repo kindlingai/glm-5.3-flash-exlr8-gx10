@@ -62,7 +62,8 @@ stays pending. tok/s.
 | 4 (k4) | 128.0 | 72.5 | 4,393 | 4,190 |
 
 - **TP=1** (one box, k2) needs `tp1.yaml` and a distinct `MENTAT_GROUP` so the
-  box does not join an existing cluster:
+  box does not join an existing cluster (add `SERVED_NAME=glm53-solo` too if a
+  `glm53` cluster is up at the same time, so mentat-serve does not route to it):
   `sudo env TP=1 MENTAT_GROUP=glm53-solo ./glm53f -f experimental/compose/tp1.yaml up -d`.
   The overlay pins KV small (exlr8.yaml's 38 GiB default does not fit beside the
   ~87 GiB weights on one box) and the entrypoint skips the NCCL fabric at TP=1.

@@ -1,4 +1,4 @@
-# TP=1: one box, the whole model at k2 (~87 GiB experts). exlr8.yaml defaults
+# TP=1: one box, the whole model at k2 (~87 GiB of weights). exlr8.yaml defaults
 # KV_CACHE_MEMORY to 38 GiB, which will not fit beside the weights on a 128 GB
 # box (~108 GiB CUDA-visible), so pin it smaller here. k2 is the only width
 # that fits one box. A single box also needs a distinct MENTAT_GROUP, or it

@@ -93,7 +93,7 @@ case "$TP" in
      (( _rs )) && : "${MAX_NUM_SEQS:=16}" "${VLLM_ADAPTIVE_K_MODEL:=32.1,1.32,0.427}"
      : "${MAX_NUM_SEQS:=4}"
      : "${VLLM_ADAPTIVE_K_MODEL:=35.0,1.27,0.8}" ;;
-  1) # One box, the whole model at k2 (~87 GiB experts). tp1.yaml sets the KV
+  1) # One box, the whole model at k2 (~87 GiB of weights). tp1.yaml sets the KV
      # pin and batch budget: exlr8.yaml defaults KV_CACHE_MEMORY to 38 GiB,
      # which would not fit beside the weights on a 128 GB box, so TP=1 needs
      # that overlay.
