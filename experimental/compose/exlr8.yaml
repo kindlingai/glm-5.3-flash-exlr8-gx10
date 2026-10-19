@@ -21,6 +21,8 @@ services:
       - ${EXLR8_TREE:-../../tree}/vllm/model_executor/layers/quantization/exlr8:/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/quantization/exlr8:ro
       - ${EXLR8_TREE:-../../tree}/vllm/distributed/device_communicators/arx.py:/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/arx.py:ro
       - ${EXLR8_TREE:-../../tree}/vllm/distributed/device_communicators/arx_vllm.cu:/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/arx_vllm.cu:ro
+      # arx_vllm.cu #includes arx_site.h; mount it too or a cold JIT rebuild fails.
+      - ${EXLR8_TREE:-../../tree}/vllm/distributed/device_communicators/arx_site.h:/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/arx_site.h:ro
       - ${EXLR8_TREE:-../../tree}/vllm/distributed/device_communicators/arxbig.cu:/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/arxbig.cu:ro
       - ${EXLR8_TREE:-../../tree}/vllm/distributed/device_communicators/cuda_communicator.py:/usr/local/lib/python3.12/dist-packages/vllm/distributed/device_communicators/cuda_communicator.py:ro
       - ${EXLR8_TREE:-../../tree}/vllm/model_executor/kernels/mhc/tilelang.py:/usr/local/lib/python3.12/dist-packages/vllm/model_executor/kernels/mhc/tilelang.py:ro

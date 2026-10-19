@@ -56,7 +56,7 @@ stays pending. tok/s.
 
 | TP (width) | decode code | decode prose | prefill 8K | prefill 32K |
 |---|---|---|---|---|
-| 1 (k2) | — | — | — | — |
+| 1 (k2) | 53.0 | 29.5 | 495 | 523 |
 | 2 (k3) | 84.2 | 50.1 | 2,609 | 2,687 |
 | 3 (k4) | _pending_ | _pending_ | _pending_ | _pending_ |
 | 4 (k4) | 128.0 | 72.5 | 4,393 | 4,190 |
