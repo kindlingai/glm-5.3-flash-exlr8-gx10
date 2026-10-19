@@ -83,7 +83,7 @@ Meaning and rationale stay in the entrypoint and compose comments.
 | `TRITON_CACHE_DIR` | `${CACHE_ROOT}/${SHARED_TAG}/triton` _(derived)_ |
 | `VLLM_ARX_PRODUCER1` | `0` (with arx.yaml and fp8.yaml; `1` has o_proj and down_proj write into the arx site slot, no all-reduce copy) |
 | `VLLM_ARX_SITE_MAX` | `0` (with arx.yaml; set to a byte cap to route decode all-reduces onto the site path; off by default — bit-exact but ~1.5% slower decode on GLM TP=4, where the all-reduce is off a MoE-read-bound step) |
-| `VLLM_ARX_TWO_SHOT_MAX_KB` | `2048` (with arx.yaml; `0` sends all-reduces over 256 KB to NCCL; NCCL is faster at 4 MB) |
+| `VLLM_ARX_TWO_SHOT_MAX_KB` | `2048` (with arx.yaml; `0` sends all-reduces over 256 KB to NCCL; up to `16384`, which measured the same at TP=4) |
 | `VLLM_DRAFT_TRUNC_EXPLORE` | `4` (with adaptive-k.yaml; every Nth step skips the draft cut, and only those steps train the estimator) |
 | `VLLM_DRAFT_TRUNC_TAU` | `0.3` (with adaptive-k.yaml; `0` turns the draft cut off) |
 | `VLLM_ENGINE_READY_TIMEOUT_S` | `3600` |

@@ -14,8 +14,9 @@ services:
       - VLLM_ARXBIG_RS=${VLLM_ARXBIG_RS:-1}
       - VLLM_ARXBIG_AG=${VLLM_ARXBIG_AG:-0}
       # Decode all-reduces above 256 KB and up to this size run arx's two-shot mode
-      # (reduce-scatter + all-gather over RDMA); 0 sends them to NCCL.
-      - VLLM_ARX_TWO_SHOT_MAX_KB=${VLLM_ARX_TWO_SHOT_MAX_KB:-16384}
+      # (reduce-scatter + all-gather over RDMA); 0 sends them to NCCL. The kernel takes up
+      # to 16384; at TP=4 that measured the same as 2048 and is not bit-exact with it.
+      - VLLM_ARX_TWO_SHOT_MAX_KB=${VLLM_ARX_TWO_SHOT_MAX_KB:-2048}
       # Decode all-reduces up to this size take the site path (per-site pinned slots, lamport
       # arrival); 0 sends them to the parity path. With VLLM_ARX_PRODUCER1=1 the dense o_proj and
       # down_proj GEMMs write into the slot and the all-reduce skips its copy (fp8.yaml's methods).
