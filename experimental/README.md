@@ -32,6 +32,8 @@ Leave a compose file out to drop that piece, or set its switch in `.env` (every 
 | `VLLM_GLM_SP_MOE_FUSED` | 1 | MoE combine feeding the RDMA reduce-scatter; needs arx.yaml with `VLLM_ARXBIG_RS=1` and megamoe.yaml with `VLLM_MOE_PREFILL=1` |
 | `VLLM_GLM_SP_MOE_QUANT_GATHER` | 1 | with `VLLM_GLM_SP_MOE_FUSED`: route each rank's own rows and gather the MoE input as NVFP4 + FP8 instead of bf16 (same results) |
 | `VLLM_GLM_ARX_PREFETCH` | 1 | L2 prefetch during decode all-reduces; needs arx.yaml |
+| `VLLM_ARX_SITE_MAX` | 0 | off by default: bit-exact with the parity path but ~1.5% slower decode on GLM TP=4, where a step is MoE-read-bound and the sub-64KB all-reduce is off the critical path. Set to a byte cap to route decode all-reduces onto arx's site path: one pinned send slot per all-reduce position in the forward and lamport arrival, the data its own flag (arx.yaml) |
+| `VLLM_ARX_PRODUCER1` | 0 | with the site path and fp8.yaml: the dense o_proj and down_proj GEMMs write their output into the site's slot and the all-reduce sends it without a copy; same bits as copy mode |
 | `VLLM_MEGAMOE` | 1 | decode MoE kernel for batches of up to `VLLM_MEGAMOE_MAX_TOKENS` (8) |
 | `VLLM_MOE_PREFILL` | 1 | prefill MoE kernel for batches of `VLLM_MOE_PREFILL_MIN_TOKENS` (1024) or more |
 | `VLLM_MOE_PREFILL_Y8` | 1 | FP8 per-expert rows in the fused prefill MoE |

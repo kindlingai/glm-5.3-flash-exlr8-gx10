@@ -19,6 +19,13 @@ larger batches use an FP8 copy kept alongside). Half the bytes again, at a
 quality cost that depends on the layer: the KDA in_proj alone cost about as much NLL as FP8 on
 everything, all dense layers about 2-3x that. The DFlash drafter's layers
 only change acceptance, never the output.
+
+With VLLM_ARX_PRODUCER1=1 (arx.py), a converted RowParallelLinear whose output
+is about to be all-reduced over TP (o_proj, the dense down_proj) runs its GEMM
+straight into the arx site's pinned send slot, and the all-reduce kernel sends
+that without its own copy (producer 1). RowParallelLinear.forward hands the
+tensor apply returns to the all-reduce with nothing in between, which is what
+the site path needs: the slot's all-reduce must be the next one.
 """
 
 import os
@@ -62,8 +69,31 @@ def prequant(placeholder: torch.Tensor, xq: torch.Tensor, xs: torch.Tensor) -> N
     _prequant[placeholder.data_ptr()] = (placeholder, xq, xs)
 
 
+_arx = None  # the TP group's arx communicator when producer 1 is on, else False; set on first use
+
+
+def _arx_slot(layer, x: torch.Tensor, n: int):
+    """The arx send slot to write layer's output of shape x.shape[:-1] + (n,) into, or None.
+
+    Only for a layer whose forward all-reduces what apply returns (a RowParallelLinear with
+    reduce_results, which _set_sp_reductions turns off under SP, where the output is
+    reduce-scattered instead). The slot is bf16 and holds the GEMM's full width, so a padded
+    layer (n_trim) and an empty batch allocate normally."""
+    global _arx
+    if _arx is None:
+        from vllm.distributed import get_tp_group
+
+        comm = getattr(get_tp_group().device_communicator, "arx_comm", None)
+        _arx = comm if comm is not None and not comm.disabled and comm.producer1 else False
+    if (_arx is False or not getattr(layer, "reduce_results", False) or layer.tp_size <= 1
+            or x.dtype != torch.bfloat16 or x.numel() == 0 or getattr(layer, "n_trim", None) is not None):
+        return None
+    return _arx.site_input((*x.shape[:-1], n))
+
+
 def _fp8_linear(x: torch.Tensor, weight: torch.Tensor, scale: torch.Tensor,
-                bias: torch.Tensor | None) -> torch.Tensor:
+                bias: torch.Tensor | None, out: torch.Tensor | None = None) -> torch.Tensor:
+    """x @ weight.T in bf16, into `out` (an _arx_slot view, at most _ROWS rows) when given."""
     shape = x.shape
     x2 = x.reshape(-1, shape[-1])
     if x2.shape[0] == 0:
@@ -74,6 +104,13 @@ def _fp8_linear(x: torch.Tensor, weight: torch.Tensor, scale: torch.Tensor,
     else:
         xq, xs = ops.scaled_fp8_quant(x2.contiguous(), use_per_token_if_dynamic=True)
     M = xq.shape[0]
+    if out is not None:
+        out2 = out.view(M, weight.shape[0])
+        if weight.shape[0] % 16 == 0 and weight.shape[1] % 16 == 0:  # else ops.cutlass_scaled_mm goes to Triton
+            torch.ops._C.cutlass_scaled_mm(out2, xq, weight.t(), xs, scale, bias)
+        else:
+            out2.copy_(ops.cutlass_scaled_mm(xq, weight.t(), xs, scale, x.dtype, bias))
+        return out
     if M <= _ROWS or weight.numel() <= _L2_WEIGHT_BYTES or weight.shape[0] % 16:
         out = ops.cutlass_scaled_mm(xq, weight.t(), xs, scale, x.dtype, bias)
         return out.reshape(*shape[:-1], weight.shape[0])
@@ -97,7 +134,8 @@ class Fp8DenseLinearMethod(LinearMethodBase):
         raise NotImplementedError("layers are converted after loading")
 
     def apply(self, layer, x, bias=None):
-        return _trim(layer, _fp8_linear(x, layer.weight, layer.weight_scale, bias))
+        out = _arx_slot(layer, x, layer.weight.shape[0])
+        return _trim(layer, _fp8_linear(x, layer.weight, layer.weight_scale, bias, out))
 
 
 def _trim(layer, y: torch.Tensor) -> torch.Tensor:
@@ -181,9 +219,10 @@ class W4DenseLinearMethod(LinearMethodBase):
         M = x2.shape[0]
         plan = _W4_PLAN.get((N, K))
         variant = (plan[(M - 1) // 8] if M <= 64 else None) if plan else (0 if M <= 32 else None)
+        out = _arx_slot(layer, x, N)
         if variant is None or x2.dtype != torch.bfloat16:
-            return _trim(layer, _fp8_linear(x, layer.weight_fp8, layer.weight_fp8_scale, bias))
-        y = torch.empty(M, N, dtype=torch.bfloat16, device=x.device)
+            return _trim(layer, _fp8_linear(x, layer.weight_fp8, layer.weight_fp8_scale, bias, out))
+        y = torch.empty(M, N, dtype=torch.bfloat16, device=x.device) if out is None else out.view(M, N)
         _w4_ext.gemm(x2.contiguous(), layer.weight, layer.weight_scale, layer.weight_scale_2, y, variant)
         if bias is not None:
             y += bias

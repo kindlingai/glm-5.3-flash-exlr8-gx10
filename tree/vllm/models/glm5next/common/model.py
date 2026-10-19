@@ -15,6 +15,7 @@ from vllm.distributed import (
     get_pp_group,
     get_tensor_model_parallel_rank,
     get_tensor_model_parallel_world_size,
+    get_tp_group,
     tensor_model_parallel_all_gather,
 )
 from vllm.logger import init_logger
@@ -952,6 +953,10 @@ class Glm5NextModel(nn.Module, EagleModelMixin):
             comb = None
 
         full_num_tokens = positions.shape[0]
+        # arx site path: all-reduce sites are numbered from 0 at every forward (arx.py).
+        comm = getattr(get_tp_group().device_communicator, "arx_comm", None)
+        if comm is not None and not comm.disabled:
+            comm.begin_step()
         global _sp_active
         sp_now = _SP_TP and not self.is_sequence_parallel and full_num_tokens >= _SP_MIN_TOKENS
         if sp_now != _sp_active:
