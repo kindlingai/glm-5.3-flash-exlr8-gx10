@@ -93,7 +93,18 @@ case "$TP" in
      (( _rs )) && : "${MAX_NUM_SEQS:=16}" "${VLLM_ADAPTIVE_K_MODEL:=32.1,1.32,0.427}"
      : "${MAX_NUM_SEQS:=4}"
      : "${VLLM_ADAPTIVE_K_MODEL:=35.0,1.27,0.8}" ;;
-  *) echo "FATAL: TP=$TP; this recipe is tuned for TP=4 or TP=RING4 (four boxes), TP=6 (six), TP=3 or TP=RING3 (three) or TP=2 (two)" >&2; exit 1 ;;
+  1) # One box, the whole model at k2 (~87 GiB of weights). tp1.yaml sets the KV
+     # pin and batch budget: exlr8.yaml defaults KV_CACHE_MEMORY to 38 GiB,
+     # which would not fit beside the weights on a 128 GB box, so TP=1 needs
+     # that overlay.
+     : "${MAX_MODEL_LEN:=163840}"
+     (( _rs )) && : "${MAX_NUM_SEQS:=16}"
+     : "${MAX_NUM_SEQS:=4}"
+     # Unfitted; VLLM_ADAPTIVE_K_ONLINE corrects it. A single rank reads every
+     # expert (k2 ~0.75x k3 bytes) so per-expert ~1.9, and the dense/attention
+     # base is ~2x a TP=2 rank's.
+     : "${VLLM_ADAPTIVE_K_MODEL:=45.0,1.90,0.60}" ;;
+  *) echo "FATAL: TP=$TP; this recipe is tuned for TP=4 or TP=RING4 (four boxes), TP=6 (six), TP=3 or TP=RING3 (three), TP=2 (two) or TP=1 (one)" >&2; exit 1 ;;
 esac
 export VLLM_ADAPTIVE_K_MODEL
 # SPEC_METHOD picks the drafter: dflash (the separate DFlash2 draft model at
@@ -211,7 +222,9 @@ fabric_port() {
 # it with the static profile already in place and the table comes up dense,
 # moving that 6 to 5, at which point a pinned 6 names an empty slot and NCCL
 # fails every TP init with "unhandled system error".
-if [[ -z "${NCCL_IB_HCA:-}" || -z "${NCCL_IB_GID_INDEX:-}" ]]; then
+if (( TP == 1 )); then
+  echo "fabric: TP=1, single rank -- no NCCL fabric derivation"
+elif [[ -z "${NCCL_IB_HCA:-}" || -z "${NCCL_IB_GID_INDEX:-}" ]]; then
   _waited=0
   while :; do
     _hcas=""; _gid=""; _mismatch=""; _missing=""
@@ -738,7 +751,7 @@ fi
 # Times an NCCL all-reduce and compares versions, override files and knobs
 # across nodes (fabric-check.py); on a ring it compares only. Warnings only;
 # FABRIC_CHECK=0 skips it, and a check that hangs is stopped.
-if [[ "${FABRIC_CHECK:-1}" == "1" ]]; then
+if [[ "${FABRIC_CHECK:-1}" == "1" ]] && (( TP > 1 )); then
   stage fabric-check
   FABRIC_LAYOUT="$FABRIC_LAYOUT" timeout "$(( 3 * ${FABRIC_CHECK_TIMEOUT_S:-120} ))" \
     python3 /usr/local/bin/fabric-check.py || echo "fabric check: failed or timed out; continuing"

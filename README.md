@@ -61,9 +61,12 @@ stays pending. tok/s.
 | 3 (k4) | _pending_ | _pending_ | _pending_ | _pending_ |
 | 4 (k4) | 128.0 | 72.5 | 4,393 | 4,190 |
 
-- **TP=1** does not boot: the image entrypoint accepts only TP=2/3/4/6 (and
-  RING3/RING4). The TP=1 row in the topology table above is aspirational until
-  the entrypoint allows it.
+- **TP=1** (one box, k2) needs `tp1.yaml` and a distinct `MENTAT_GROUP` so the
+  box does not join an existing cluster (add `SERVED_NAME=glm53-solo` too if a
+  `glm53` cluster is up at the same time, so mentat-serve does not route to it):
+  `sudo env TP=1 MENTAT_GROUP=glm53-solo ./glm53f -f experimental/compose/tp1.yaml up -d`.
+  The overlay pins KV small (exlr8.yaml's 38 GiB default does not fit beside the
+  ~87 GiB weights on one box) and the entrypoint skips the NCCL fabric at TP=1.
 - **TP=3** is pending: the padded `exlr8-release-tp3` config carries no
   `quantization` field, so vLLM loads it as bfloat16 rather than exlr8 and the
   engine fails to start. It needs the exlr8 quant forced on the padded path.
