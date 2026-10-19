@@ -48,6 +48,26 @@ session; filled per topology as each completes.
 | 3 (k4) | _pending_ | | | | |
 | 4 (k4) | _pending_ | | | | |
 
+### Decode and prefill, measured 2026-10-19 (image v26, clocks TP-locked at 2200 MHz)
+
+`gate/bench/bench.py` decode (16 runs, code and prose; spec-decode DFlash2 +
+adaptive-k) and `prefill_sweep.py`. Different harness from RigMark above, which
+stays pending. tok/s.
+
+| TP (width) | decode code | decode prose | prefill 8K | prefill 32K |
+|---|---|---|---|---|
+| 1 (k2) | — | — | — | — |
+| 2 (k3) | 84.2 | 50.1 | 2,609 | 2,687 |
+| 3 (k4) | _pending_ | _pending_ | _pending_ | _pending_ |
+| 4 (k4) | 128.0 | 72.5 | 4,393 | 4,190 |
+
+- **TP=1** does not boot: the image entrypoint accepts only TP=2/3/4/6 (and
+  RING3/RING4). The TP=1 row in the topology table above is aspirational until
+  the entrypoint allows it.
+- **TP=3** is pending: the padded `exlr8-release-tp3` config carries no
+  `quantization` field, so vLLM loads it as bfloat16 rather than exlr8 and the
+  engine fails to start. It needs the exlr8 quant forced on the padded path.
+
 ## Running it
 
 The `./glm53f` launcher stacks `compose/glm53.yaml` + every overlay in
