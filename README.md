@@ -8,6 +8,11 @@ trellis units, the dense linears stay FP8/NVFP4, and everything else — DFlash2
 speculation, adaptive-k, RecoverSSM, sparse MLA, the mentat control plane — is
 unchanged.
 
+## What's missing
+
+ - Vision tower is coming soon!
+ - KV is not fully tuned at each TP level
+
 ## Why exlr8
 
 Against the shipping NVFP4 Flash build, measured at TP=4:
