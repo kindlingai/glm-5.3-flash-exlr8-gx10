@@ -8,8 +8,6 @@ trellis units, the dense linears stay FP8/NVFP4, and everything else — DFlash2
 speculation, adaptive-k, RecoverSSM, sparse MLA, the mentat control plane — is
 unchanged.
 
-Private while the Flash quant is unreleased.
-
 ## Why exlr8
 
 Against the shipping NVFP4 Flash build, measured at TP=4:
