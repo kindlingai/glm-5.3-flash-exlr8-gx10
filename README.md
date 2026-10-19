@@ -36,23 +36,10 @@ topology-specific, so TP=1 and TP=2 reuse the TP=4 release.
 | 3 | 3 | k4 | `exlr8-release-tp3` | padded config (66 / 2304), `tp3.yaml` |
 | 4 | 4 | k4 | `exlr8-release` | the validated default |
 
-## RigMark (clocks capped at 2200 MHz)
-
-RigMark 1.0.0, `reasoning=low`, 8K prefill depth. Pending the test runs in this
-session; filled per topology as each completes.
-
-| TP (width) | code tok/s | prose tok/s | structured tok/s | 8K prefill cold | multi-agent C1 / C2 / C4 |
-|---|---|---|---|---|---|
-| 1 (k2) | _pending_ | | | | |
-| 2 (k3) | _pending_ | | | | |
-| 3 (k4) | _pending_ | | | | |
-| 4 (k4) | _pending_ | | | | |
-
-### Decode and prefill, measured 2026-10-19 (image v26, clocks TP-locked at 2200 MHz)
+## Decode and prefill, measured 2026-10-19 (clocks TP-locked at 2200 MHz)
 
 `gate/bench/bench.py` decode (16 runs, code and prose; spec-decode DFlash2 +
-adaptive-k) and `prefill_sweep.py`. Different harness from RigMark above, which
-stays pending. tok/s.
+adaptive-k) and `prefill_sweep.py`. tok/s.
 
 | TP (width) | decode code | decode prose | prefill 8K | prefill 32K |
 |---|---|---|---|---|
