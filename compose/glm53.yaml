@@ -27,10 +27,11 @@ services:
   glm53:
     # image/build.sh's default tag. Keep the two in step: the entrypoint's
     # defaults live in the image, and an older tag boots silently mistuned.
-    # v26+ is required: older entrypoints ignore SPEC_EXTRA, so adaptive-k
-    # collapses to a single draft level (no prose taper) and the drafter
-    # loses disable_eagle_block_drop + the TRITON_ATTN backend.
-    image: ${IMAGE:-spark-glm53:v26}
+    # v27+ is required: exlr8.yaml passes quantization through the QUANT knob
+    # the entrypoint gained in v27, and older entrypoints also ignore SPEC_EXTRA
+    # (adaptive-k collapses to one draft level, no prose taper, and the drafter
+    # loses disable_eagle_block_drop + the TRITON_ATTN backend).
+    image: ${IMAGE:-spark-glm53:v27}
     container_name: glm53
     network_mode: host
     ipc: host
