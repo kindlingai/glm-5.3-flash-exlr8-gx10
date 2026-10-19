@@ -1058,7 +1058,7 @@ exec vllm serve "$MODEL" \
   --served-model-name "$SERVED" \
   --tensor-parallel-size "$TP" \
   --distributed-executor-backend ray \
-  --load-format auto \
+  --load-format "${QUANT:-auto}" \
   --safetensors-load-strategy "${SAFETENSORS_LOAD_STRATEGY:-eager}" \
   --gpu-memory-utilization "${GPU_MEM_UTIL:-0.88}" \
   --max-model-len "${MAX_MODEL_LEN}" \
@@ -1080,4 +1080,4 @@ exec vllm serve "$MODEL" \
   "${SPEC[@]}" \
   --host 0.0.0.0 --port "${API_PORT:-8002}" \
   ${EXTRA_ARGS:-} \
-  ${QUANT:+--quantization $QUANT --load-format $QUANT}
+  ${QUANT:+--quantization $QUANT}
