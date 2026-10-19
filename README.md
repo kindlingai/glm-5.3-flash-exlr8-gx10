@@ -8,10 +8,10 @@ trellis units, the dense linears stay FP8/NVFP4, and everything else — DFlash2
 speculation, adaptive-k, RecoverSSM, sparse MLA, the mentat control plane — is
 unchanged.
 
-## What's missing
+## Limits
 
- - Vision tower is coming soon!
- - KV is not fully tuned at each TP level
+ - Images work at every TP, but DFlash2 drafts from the text alone, so draft
+   acceptance on a turn with an image can be lower than on a text-only turn.
 
 ## Why exlr8
 
@@ -55,11 +55,34 @@ adaptive-k) and `prefill_sweep.py`. tok/s.
   box does not join an existing cluster (add `SERVED_NAME=glm53-solo` too if a
   `glm53` cluster is up at the same time, so mentat-serve does not route to it):
   `sudo env TP=1 MENTAT_GROUP=glm53-solo ./glm53f -f experimental/compose/tp1.yaml up -d`.
-  The overlay pins KV small (exlr8.yaml's 38 GiB default does not fit beside the
-  ~87 GiB weights on one box) and the entrypoint skips the NCCL fabric at TP=1.
-- **TP=3** is pending: the padded `exlr8-release-tp3` config carries no
-  `quantization` field, so vLLM loads it as bfloat16 rather than exlr8 and the
-  engine fails to start. It needs the exlr8 quant forced on the padded path.
+  The entrypoint skips the NCCL fabric at TP=1.
+- The TP=3 row used a 38 GiB KV pin, which left the head 0.5 GiB of free RAM
+  and 4 GiB of swap in use. The shipped TP=3 pin is 26 GiB (see below).
+
+## KV cache per TP
+
+The entrypoint picks the KV pin from `TP` when `QUANT=exlr8`. Each pin is sized
+for DGX OS: with the vision tower loaded, it left the head about 4.5 GiB of free
+RAM at its lowest point. The load was 480k-token prefills and four concurrent
+128k requests at TP=3 and TP=4, and 128k-160k prefills and four concurrent 32k
+requests at TP=1 and TP=2, whose context is 160k. On kindling-spark-os,
+`dispram.yaml` adds `KV_EXTRA_MEMORY` (2 GiB, the RAM its 64 KiB kernel returns)
+to the pin at TP=2 and up, and dispramd lends the display carveout on top. TP=1
+takes no extra: at 12 GiB its one box went 1.7 GiB into swap. Set
+`KV_CACHE_MEMORY` to override.
+
+| TP (width) | DGX OS pin | DGX OS KV tokens | spark-os pin | spark-os KV tokens | head's lowest free RAM, DGX OS |
+|---|---|---|---|---|---|
+| 1 (k2) | 10 GiB | 1,122,607 | 10 GiB | 1,359,265 | 5.1 GiB |
+| 2 (k3) | 30 GiB | 4,208,867 | 32 GiB | 4,776,846 | ~4.4 GiB |
+| 3 (k4) | 26 GiB | 4,258,159 | 28 GiB | 4,926,962 | ~4.7 GiB |
+| 4 (k4) | 38 GiB | 6,459,582 | 40 GiB | 7,147,571 | ~8.2 GiB |
+
+TP=1 DGX OS figures come from a GX10 on stock Ubuntu. The other DGX OS token
+counts come from spark-os boots with `DISPRAM=0` and no `KV_EXTRA_MEMORY`,
+which give the pool DGX OS gets at that pin. Their free-RAM figures are the
+spark-os low point less 2 GiB. TP=4 keeps a wider margin: its pool already holds
+12 requests at the full 512k context on DGX OS.
 
 ## Running it
 
@@ -102,7 +125,8 @@ rsync -a /path/to/vllm-exlr8/vllm/<file> tree/vllm/<file>
 ```
 
 The release (`MODEL_DIR`) is config + tokenizer + symlinks to the shared dense
-weights and the `k2`/`k3`/`k4` expert units. It is small; the experts it points
+weights and the `k2`/`k3`/`k4` expert units. `dense/vision-bf16.safetensors`
+holds the vision tower; with every `LIMIT_MM` limit at 0 the loader skips it. It is small; the experts it points
 at are the large files.
 
 ## Provenance
@@ -110,4 +134,7 @@ at are the large files.
 - vLLM stack: `kindlingai/vllm-exlr8` branch `exlr8` @ `a2e163cb05` (private).
 - Base recipe: `mmastrac/glm-5.3-flash-4x-gx10` @ `0d1f462`.
 - Expert units: `kindlingai/glm-5.3-flash-exlr8-k2-k3-k4`.
+- Vision tower: the 347 `model.visual.*` BF16 tensors of the GLM-5.3-Flash BF16
+  checkpoint (revision `91b69215804f2d2036a8867f6ce44848e278dcda`), copied byte
+  for byte. They are identical to the tower in the NVFP4 checkpoint.
 - Kernel: `kindlingai/exl3rate` (exl3rate MoE, ported to vLLM as `exlr8_moe.cu`).

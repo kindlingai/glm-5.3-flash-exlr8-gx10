@@ -128,6 +128,12 @@ class Snapshot:
         # and drops the input scales flashinfer_cutlass keeps), so a snapshot
         # from one backend cannot load under another.
         key["moe_backend"] = str(getattr(vllm_config.kernel_config, "moe_backend", ""))
+        # A text-only boot builds no vision tower, so its snapshot has no tower tensors, and the encoder's TP
+        # mode decides whether a rank holds a shard or the whole tower. Only a boot with the tower adds the
+        # field, which leaves the names of existing text-only snapshots unchanged.
+        mm = model_config.multimodal_config
+        if mm is not None and any(mm.get_limit_per_prompt(m) for m in ("image", "video")):
+            key["vision"] = str(mm.mm_encoder_tp_mode)
         digest = hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()[:16]
         role = "draft" if is_draft else "target"
         name = f"v{SNAPSHOT_VERSION}-{role}-tp{key['tp_rank']}of{key['tp_size']}-dp{key['dp_rank']}-{digest}"
