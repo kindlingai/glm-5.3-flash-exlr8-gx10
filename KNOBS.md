@@ -35,7 +35,8 @@ Meaning and rationale stay in the entrypoint and compose comments.
 | `HEAD_HOST` | elected when `ROLE` is also unset _(derived)_ |
 | `ITERATION_DETAILS` | _(empty)_ |
 | `KV_CACHE_DTYPE` | `fp8_e4m3` |
-| `KV_CACHE_MEMORY` | `27917287424` |
+| `KV_CACHE_MEMORY` | per `TP` and `QUANT`, plus `KV_EXTRA_MEMORY` _(derived)_ |
+| `KV_EXTRA_MEMORY` | `0` |
 | `LIMIT_MM` | `{\"image\":16,\"video\":0\}` |
 | `LONG_PREFILL_TOKEN_THRESHOLD` | `2304` |
 | `MAX_JOBS` | `4` |
