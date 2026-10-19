@@ -1,0 +1,23 @@
+# TP=1: one box, the whole model at k2 (~87 GiB experts). exlr8.yaml defaults
+# KV_CACHE_MEMORY to 38 GiB, which will not fit beside the weights on a 128 GB
+# box (~108 GiB CUDA-visible), so pin it smaller here. k2 is the only width
+# that fits one box. A single box also needs a distinct MENTAT_GROUP, or it
+# joins an existing glm53 cluster and sits as a worker:
+#
+#   sudo env TP=1 MENTAT_GROUP=glm53-solo \
+#     ./glm53f -f experimental/compose/tp1.yaml up -d
+#
+# Stack it last (after exlr8.yaml). The entrypoint skips the NCCL fabric
+# derivation and fabric-check at TP=1, so an uncabled single box is fine.
+services:
+  glm53:
+    environment:
+      - TP=${TP:-1}
+      - VLLM_EXLR8_WIDTHS=${VLLM_EXLR8_WIDTHS:-k2}
+      - MODEL_DIR=${MODEL_DIR:-/models/nas/glm-5.3-flash/exlr8-release}
+      # 87 GiB weights + pin must fit ~108 GiB. Start conservative and raise
+      # after reading /memory. Batch 4096 holds the prefill activation peak:
+      # SP shards tokens, so TP=1 at 4096 matches TP=2's peak at 8192, which is
+      # where an 8 GiB pin last OOM-killed a worker.
+      - KV_CACHE_MEMORY=${KV_CACHE_MEMORY:-6442450944}
+      - MAX_NUM_BATCHED_TOKENS=${MAX_NUM_BATCHED_TOKENS:-4096}
