@@ -67,4 +67,3 @@ services:
       - VLLM_WEIGHT_SNAPSHOT_DIR=/root/.cache/weight-snapshots
       - VLLM_WEIGHT_SNAPSHOT_TAG=exlr8-${EXLR8_TAG:-dev}
       - KV_CACHE_MEMORY=${KV_CACHE_MEMORY:-40802189312}
-      - LIMIT_MM={"image":0,"video":0}

@@ -7,6 +7,7 @@ Any other model directory (a BF16 drafter, say) loads as the default loader woul
 """
 
 import dataclasses
+import itertools
 import json
 import os
 import time
@@ -59,6 +60,15 @@ def dense_weights(root: str, layers: int, device) -> "iter[tuple[str, torch.Tens
         torch.cuda.empty_cache()
 
 
+def vision_weights(path: str, device) -> "iter[tuple[str, torch.Tensor]]":
+    """The BF16 vision tower under its HF names."""
+    from safetensors import safe_open
+
+    with safe_open(path, "pt", device=str(device)) as f:
+        for n in f.keys():
+            yield n, f.get_tensor(n)
+
+
 class Exlr8ModelLoader(DefaultModelLoader):
     def _default(self) -> DefaultModelLoader:
         """The default loader for any other directory, e.g. a BF16 drafter, which the speculator loads with the
@@ -74,12 +84,25 @@ class Exlr8ModelLoader(DefaultModelLoader):
         if not is_exlr8_release(root):
             return self._default().load_weights(model, model_config)
         from vllm.model_executor.layers.quantization.exlr8 import Exlr8MoEMethod
+        from vllm.model_executor.models.utils import StageMissingLayer
+
+        # With every image and video limit at 0 the tower is a placeholder with no parameters.
+        tower = getattr(model, "visual", None)
+        vision = None
+        if tower is not None and not isinstance(tower, StageMissingLayer):
+            vision = os.path.join(root, "dense", "vision-bf16.safetensors")
+            if not os.path.isfile(vision):
+                raise RuntimeError(f"exlr8: {root} has no dense/vision-bf16.safetensors; set LIMIT_MM to "
+                                   '{"image":0,"video":0} to serve text only')
 
         t0 = time.perf_counter()
         text = getattr(model_config.hf_config, "text_config", model_config.hf_config)
         device = torch.device("cuda", torch.cuda.current_device())
         with torch.no_grad():
-            loaded = model.load_weights(dense_weights(root, text.num_hidden_layers, device)) or set()
+            weights = dense_weights(root, text.num_hidden_layers, device)
+            if vision:
+                weights = itertools.chain(weights, vision_weights(vision, device))
+            loaded = model.load_weights(weights) or set()
             n = 0
             for name, m in model.named_modules():
                 method = getattr(m, "quant_method", None)
