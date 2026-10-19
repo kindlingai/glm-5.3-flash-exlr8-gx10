@@ -23,6 +23,7 @@ Meaning and rationale stay in the entrypoint and compose comments.
 | `DECODE_RESERVE_TOKENS` | _(empty)_ |
 | `DFLASH_MODEL` | `/models/glm-5.3-flash-dflash2` |
 | `EXTRA_ARGS` | _(empty)_ |
+| `QUANT` | _(empty)_ |
 | `FABRIC_CHECK` | `1` |
 | `FABRIC_CHECK_GBPS_PER_DEVICE` | `95` |
 | `FABRIC_CHECK_PORT` | `29511` |

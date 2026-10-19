@@ -18,10 +18,10 @@ services:
       # TP=3 unless the .env says otherwise — it sets TP=RING3 for the
       # three-box triangle (experimental/tp3/README.md, RING3 section).
       - TP=${TP:-3}
-      # Compose replaces EXTRA_ARGS rather than appending, so exlr8.yaml's
-      # --quantization/--load-format must be restated here or the padded model
-      # loads as bfloat16. Plus adaptive-k's scheduler and a data-parallel
-      # vision tower (its 16 ViT heads and 10240-wide merger do not split by 3).
-      - EXTRA_ARGS=--scheduler-cls vllm.v1.core.sched.adaptive_k.AdaptiveKScheduler --quantization exlr8 --load-format exlr8 --mm-encoder-tp-mode data ${PROF_ARGS:-}
+      # adaptive-k's scheduler plus a data-parallel vision tower (its 16 ViT
+      # heads and 10240-wide merger do not split by 3). The exlr8 quant/load-
+      # format come from the QUANT knob (exlr8.yaml), not EXTRA_ARGS, so
+      # restating EXTRA_ARGS here no longer drops them.
+      - EXTRA_ARGS=--scheduler-cls vllm.v1.core.sched.adaptive_k.AdaptiveKScheduler --mm-encoder-tp-mode data ${PROF_ARGS:-}
       # Padded weights process differently: never restore a TP=4 snapshot.
       - VLLM_WEIGHT_SNAPSHOT_TAG=tp3pad-2026-09-28
