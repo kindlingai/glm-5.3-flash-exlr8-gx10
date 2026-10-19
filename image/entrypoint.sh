@@ -93,7 +93,17 @@ case "$TP" in
      (( _rs )) && : "${MAX_NUM_SEQS:=16}" "${VLLM_ADAPTIVE_K_MODEL:=32.1,1.32,0.427}"
      : "${MAX_NUM_SEQS:=4}"
      : "${VLLM_ADAPTIVE_K_MODEL:=35.0,1.27,0.8}" ;;
-  *) echo "FATAL: TP=$TP; this recipe is tuned for TP=4 or TP=RING4 (four boxes), TP=6 (six), TP=3 or TP=RING3 (three) or TP=2 (two)" >&2; exit 1 ;;
+  1) # One box, the whole model at k2 (~87 GiB experts). A single rank carries
+     # no cross-rank NCCL/arx buffers, so a multi-box rank's overhead is gone,
+     # but the full expert set is resident. KV pin, length and batch budget are
+     # a conservative guess (room left for the prefill activation peak); the
+     # online cost model corrects the adaptive-k prior, which has no all-reduce
+     # in the step and so a lower base than TP=2.
+     : "${KV_CACHE_MEMORY:=8589934592}" "${MAX_MODEL_LEN:=163840}" "${MAX_NUM_BATCHED_TOKENS:=8192}"
+     (( _rs )) && : "${MAX_NUM_SEQS:=16}"
+     : "${MAX_NUM_SEQS:=4}"
+     : "${VLLM_ADAPTIVE_K_MODEL:=30.0,1.00,0.60}" ;;
+  *) echo "FATAL: TP=$TP; this recipe is tuned for TP=4 or TP=RING4 (four boxes), TP=6 (six), TP=3 or TP=RING3 (three), TP=2 (two) or TP=1 (one)" >&2; exit 1 ;;
 esac
 export VLLM_ADAPTIVE_K_MODEL
 # SPEC_METHOD picks the drafter: dflash (the separate DFlash2 draft model at
