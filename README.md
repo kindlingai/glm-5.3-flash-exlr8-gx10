@@ -24,7 +24,9 @@ Against the shipping NVFP4 Flash build, measured at TP=4:
   routed MoE kernel at the 8,192-token prefill budget. Work in progress.
 
 Expert width trades size for quality and is chosen at boot
-(`VLLM_EXLR8_WIDTHS`): **k2 ≈ 2.25 bpw**, **k3 ≈ 3 bpw**, **k4 ≈ 3.38 bpw**.
+(`VLLM_EXLR8_WIDTHS`): **k2 = 2 bpw**, **k3 = 3 bpw**, **k4 = 4 bpw** for the routed and shared
+experts (a k4 file is 3,636,527,104 bytes a layer for 288 experts of 3 x 4096 x 2048). NVFP4's
+experts are 4.25 bpw, so k4 reads about 6% fewer expert bytes a token.
 
 ## Topologies
 
