@@ -1,6 +1,6 @@
 # GLM-5.3-Flash on DGX Spark (GB10): TP=2, 3, 4 or 6
 
-Need help? Join us on discord: https://discord.gg/M7XTrRJW3
+Need help? Join us on Discord: https://discord.gg/VmsM9GWqZ
 
 nvidia/GLM-5.3-Flash-NVFP4 served by vLLM on two, three, four or six GB10
 boxes (TP=2, 3, 4 or 6), over RoCE. The base is an unmodified vLLM nightly

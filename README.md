@@ -111,7 +111,7 @@ sudo env TP=2 VLLM_EXLR8_WIDTHS=k3 ./glm53f up -d
 sudo env TP=1 VLLM_EXLR8_WIDTHS=k2 ./glm53f up -d
 
 # TP=3, k4 (padded config overlay)
-sudo env TP=3 VLLM_EXLR8_WIDTHS=k4 MODEL_DIR=/path/to/models/glm-5.3-flash/exlr8-release-tp3 \
+sudo env TP=3 VLLM_EXLR8_WIDTHS=k4 MODEL_DIR=/models/nas/glm-5.3-flash/exlr8-release-tp3 \
   ./glm53f -f experimental/compose/tp3.yaml up -d
 ```
 
