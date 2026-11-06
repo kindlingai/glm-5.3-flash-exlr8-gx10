@@ -1,6 +1,6 @@
 # GLM-5.3-Flash on DGX Spark (GB10): TP=2, 3, 4 or 6
 
-Need help? Join us on discord: https://discord.gg/M7XTrRJW3
+Need help? Join us on Discord: https://discord.gg/8EAvYPV2rE
 
 nvidia/GLM-5.3-Flash-NVFP4 served by vLLM on two, three, four or six GB10
 boxes (TP=2, 3, 4 or 6), over RoCE. The base is an unmodified vLLM nightly
@@ -614,10 +614,10 @@ and [RigMark](https://github.com/alexellis/rigmark) for the gate ·
 [incoai](https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2) (the DFlash2 drafter) ·
 [NNNtrance](https://github.com/NNNtrance/GLM-5.3-Flash-EXL3-DGX-Spark) (the fail-closed
 tool parser idea) ·
-[Chuck](https://github.com/chuck-ads) (the RDMA path MTU, [#6](https://github.com/mmastrac/glm-5.3-flash-4x-gx10/pull/6), and the
-streamed tool call and page cache reports, [#7](https://github.com/mmastrac/glm-5.3-flash-4x-gx10/issues/7)) ·
+[Chuck](https://github.com/chuck-ads) (the RDMA path MTU, [#6](https://github.com/kindlingai/glm-5.3-flash-gx10/pull/6), and the
+streamed tool call and page cache reports, [#7](https://github.com/kindlingai/glm-5.3-flash-gx10/issues/7)) ·
 [ayayalar](https://github.com/ayayalar) (the first-boot stall report behind the
-fabric check, [#5](https://github.com/mmastrac/glm-5.3-flash-4x-gx10/issues/5)) ·
+fabric check, [#5](https://github.com/kindlingai/glm-5.3-flash-gx10/issues/5)) ·
 [stevededrick](https://github.com/stevededrick) (the arx idle backoff,
 [#59](https://github.com/kindlingai/glm-5.3-flash-gx10/pull/59)) ·
 [sdougbrown](https://github.com/sdougbrown) (the EAGLE block drop,

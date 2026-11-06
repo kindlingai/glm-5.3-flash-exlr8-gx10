@@ -1,5 +1,9 @@
 # GLM-5.3-Flash exlr8 recipe (GB10, TP=1/2/3/4)
 
+> On one or two boxes, [gr8](https://github.com/kindlingai/gr8) also serves GLM-5.3-Flash exlr8, without vLLM:
+> [one box](https://github.com/kindlingai/glm-5.3-flash-exlr8-1x-spark),
+> [two boxes](https://github.com/kindlingai/glm-5.3-flash-exlr8-2x-spark).
+
 A serving recipe for GLM-5.3-Flash with **exlr8** routed experts — EXL3-trellis
 units decoded by a custom MoE kernel — on ASUS GX10 / NVIDIA GB10. It is the
 NVFP4 Flash recipe (see [README-nvfp4-base.md](README-nvfp4-base.md)) with the
@@ -98,7 +102,7 @@ through). Pin the head with `HEAD_HOST` + `ROLE` when you want a known API box.
 
 ```bash
 # TP=4, k4 (default)
-sudo env MODELS_ROOT=/mnt/nfs/models ./glm53f up -d
+sudo env MODELS_ROOT=/path/to/models ./glm53f up -d
 
 # TP=2, k3
 sudo env TP=2 VLLM_EXLR8_WIDTHS=k3 ./glm53f up -d
