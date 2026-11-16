@@ -13,6 +13,8 @@
 # EXLR8_TREE defaults to this repo's tree/ (the launcher exports it). MODEL_DIR is
 # the assembled release (config + tokenizer + symlinks to the k2/k3/k4 experts and
 # the shared dense), reachable in the container — mount its parent and point at it.
+# Build it from tag v0.1 of kindlingai/glm-5.3-flash-exlr8-k2-k3-k4 (all mcg). Later
+# versions put pmcgx-codebook layers in, which this kernel cannot decode.
 services:
   glm53:
     volumes:

@@ -1,5 +1,18 @@
 # GLM-5.3-Flash exlr8 recipe (GB10, TP=1/2/3/4)
 
+> [!WARNING]
+> **This recipe requires tag `v0.1` of
+> [kindlingai/glm-5.3-flash-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-flash-exlr8-k2-k3-k4),
+> the quant with every layer in the mcg codebook.** The release's `main` now holds v0.2, which stores layers 3, 20,
+> 43 and 44 in the pmcgx codebook. This recipe's MoE kernel decodes only mcg, so it does not support v0.2 or `main`.
+> Download v0.1 by its tag:
+>
+> ```bash
+> hf download kindlingai/glm-5.3-flash-exlr8-k2-k3-k4 --revision v0.1 --local-dir /path/to/models/glm-5.3-flash-exlr8-v0.1
+> ```
+>
+> [gr8](https://github.com/kindlingai/gr8) serves v0.2.
+
 > On one or two boxes, [gr8](https://github.com/kindlingai/gr8) also serves GLM-5.3-Flash exlr8, without vLLM:
 > [one box](https://github.com/kindlingai/glm-5.3-flash-exlr8-1x-spark),
 > [two boxes](https://github.com/kindlingai/glm-5.3-flash-exlr8-2x-spark).
@@ -139,7 +152,9 @@ at are the large files.
 
 - vLLM stack: `kindlingai/vllm-exlr8` branch `exlr8` @ `a2e163cb05` (private).
 - Base recipe: `mmastrac/glm-5.3-flash-4x-gx10` @ `0d1f462`.
-- Expert units: `kindlingai/glm-5.3-flash-exlr8-k2-k3-k4`.
+- Expert units: `kindlingai/glm-5.3-flash-exlr8-k2-k3-k4` at tag `v0.1`
+  (commit `1a22815d178a79f78bb44e6858f0ee446ae8f0d4`, every layer in the mcg codebook). Later versions use the
+  pmcgx codebook in some layers, which this recipe cannot decode.
 - Vision tower: the 347 `model.visual.*` BF16 tensors of the GLM-5.3-Flash BF16
   checkpoint (revision `91b69215804f2d2036a8867f6ce44848e278dcda`), copied byte
   for byte. They are identical to the tower in the NVFP4 checkpoint.
